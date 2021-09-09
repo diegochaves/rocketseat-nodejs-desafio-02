@@ -9,20 +9,63 @@ app.use(cors());
 
 const users = [];
 
+function getUserByUsername(username) {
+  return users.find((user) => user.username == username);
+}
+
+function getUserById(id) {
+  return users.find((user) => user.id == id);
+}
+
+function getTodofromUserById(user, todoId) {
+  return user.todos.find((todo) => todo.id == todoId);
+}
+
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers;
+  const user = getUserByUsername(username);
+  if (user) {
+      request.user = user;
+      next();
+  }
+  return response.status(404).json({error: "Usuário não encontrado!"});
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const {user} = request;
+  if (user.pro || user.todos.length < 10) {
+    next();
+  }
+  return response.status(403).json({error: "Não é permitido criar mais de 10 todos!"})
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers;
+  const user = getUserByUsername(username);
+  if (user) {
+    const { id: todoId } = request.params;
+    if (!validate(todoId)) {
+      return response.status(400).json({error: "Id da Todo Inválido!"});
+    }
+    todo = getTodofromUserById(user, todoId);
+    if (todo) {
+      request.user = user;
+      request.todo = todo;
+      next();
+    }
+    return response.status(404).json({error: "Todo não encontrado!"});
+  }
+  return response.status(404).json({error: "Usuário não encontrado!"});
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const {id} = request.params;
+  const user = getUserById(id);
+  if (user) {
+      request.user = user;
+      next();
+  }
+  return response.status(404).json({error: "Usuário não encontrado!"});
 }
 
 app.post('/users', (request, response) => {
